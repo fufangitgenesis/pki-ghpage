@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { KPICard } from "./KPICard";
 import { ActivityLogForm } from "./ActivityLogForm";
 import { VitalityChecklist } from "./VitalityChecklist";
@@ -26,10 +27,7 @@ import {
   TrendingUp,
   Calendar,
   BarChart3,
-  Plus
 } from "lucide-react";
-// Add this import for the Link component
-import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export function Dashboard() {
@@ -63,12 +61,12 @@ export function Dashboard() {
     try {
       await db.init();
       await db.initializeDefaultData();
-      
+
       const [categoriesData, vitalityData] = await Promise.all([
         db.getCategories(),
         db.getVitalityBonuses()
       ]);
-      
+
       setCategories(categoriesData);
       setVitalityBonuses(vitalityData);
       setIsLoading(false);
@@ -89,10 +87,10 @@ export function Dashboard() {
         db.getActivitiesByDate(dateString),
         db.getVitalityEntriesByDate(dateString)
       ]);
-      
+
       setActivities(activitiesData);
       setVitalityEntries(vitalityData);
-      
+
       const dailyMetrics = calculateDailyMetrics(
         activitiesData,
         categories,
@@ -111,33 +109,18 @@ export function Dashboard() {
   };
 
   const handleActivityLogged = async (activity: ActivityLog) => {
-    try {
-      await db.addActivity(activity);
-      await loadDayData();
-    } catch (error) {
-      console.error('Failed to log activity:', error);
-      throw error;
-    }
+    await db.addActivity(activity);
+    await loadDayData();
   };
 
   const handleActivityUpdated = async (activity: ActivityLog) => {
-    try {
-      await db.updateActivity(activity);
-      await loadDayData();
-    } catch (error) {
-      console.error('Failed to update activity:', error);
-      throw error;
-    }
+    await db.updateActivity(activity);
+    await loadDayData();
   };
 
   const handleActivityDeleted = async (activityId: string) => {
-    try {
-      await db.deleteActivity(activityId);
-      await loadDayData();
-    } catch (error) {
-      console.error('Failed to delete activity:', error);
-      throw error;
-    }
+    await db.deleteActivity(activityId);
+    await loadDayData();
   };
 
   const handleVitalityToggle = async (bonusId: string, completed: boolean) => {
@@ -159,7 +142,7 @@ export function Dashboard() {
         };
         await db.addVitalityEntry(newEntry);
       }
-      
+
       await loadDayData();
     } catch (error) {
       console.error('Failed to update vitality entry:', error);
@@ -184,7 +167,6 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      {/* Header */}
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -201,17 +183,18 @@ export function Dashboard() {
                 <Calendar className="h-4 w-4 mr-2" />
                 {selectedDate.toLocaleDateString()}
               </Button>
-              <Button variant="outline" size="sm">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/analytics">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Analytics
+                </Link>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8 space-y-8">
-        {/* KPI Cards */}
+      <main className="container mx-auto px-6 py-8 space-y-8">
         <section>
           <h2 className="text-lg font-semibold mb-4">Today's Performance</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -245,7 +228,6 @@ export function Dashboard() {
           </div>
         </section>
 
-        {/* Daily Logging */}
         <section>
           <h2 className="text-lg font-semibold mb-4">Daily Logging</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -274,7 +256,6 @@ export function Dashboard() {
               </TabsContent>
             </Tabs>
 
-            {/* Daily Summary */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -290,50 +271,34 @@ export function Dashboard() {
                     </p>
                     <p className="text-sm text-muted-foreground">Total Daily Score</p>
                   </div>
-                  
-                  {/* Time allocation chart placeholder */}
-   <div className="space-y-3">
-        {categories.map(category => {
-          const categoryTime = activities
-            .filter(activity => activity.categoryId === category.id)
-            .reduce((sum, activity) => sum + activity.duration, 0);
-
-          if (categoryTime === 0) return null;
-
-          return (
-            <div key={category.id} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                />
-                <span>{category.name}</span>
-              </div>
-              <span className="font-medium">
-                {formatDuration(categoryTime)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  </CardContent>
-</Card>
+                  <div className="space-y-3">
+                    {categories.map(category => {
+                      const categoryTime = activities
+                        .filter(activity => activity.categoryId === category.id)
+                        .reduce((sum, activity) => sum + activity.duration, 0);
+                      if (categoryTime === 0) return null;
+                      return (
+                        <div key={category.id} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span>{category.name}</span>
+                          </div>
+                          <span className="font-medium">
+                            {formatDuration(categoryTime)}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
-                      )
-                }
-                )
-                }
                 </div>
               </CardContent>
             </Card>
           </div>
         </section>
 
-        {/* Navigation to Analytics */}
         <section>
           <Card>
             <CardContent className="p-6">
@@ -353,7 +318,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
         </section>
-      </div>
+      </main>
     </div>
   );
 }
