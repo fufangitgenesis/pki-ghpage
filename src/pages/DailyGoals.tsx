@@ -31,6 +31,8 @@ export function DailyGoals() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [isAddingGoal, setIsAddingGoal] = useState<string | null>(null);
+  const [newGoalMinutes, setNewGoalMinutes] = useState("60");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -78,23 +80,25 @@ export function DailyGoals() {
     loadData();
   };
 
-  const addGoal = (categoryId: string) => {
-    console.log('Adding goal for category:', categoryId);
+  const addGoal = (categoryId: string, minutes: number = 60) => {
+    console.log('Adding goal for category:', categoryId, 'with minutes:', minutes);
     try {
       const dateString = getDateString(selectedDate);
       const newGoal: DailyGoal = {
         id: `goal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         categoryId,
-        targetMinutes: 60,
+        targetMinutes: minutes,
         date: dateString
       };
       const updatedGoals = [...goals, newGoal];
       saveGoals(updatedGoals);
       toast({
         title: "Goal Added",
-        description: "Daily goal has been set successfully."
+        description: `Daily goal set for ${minutes} minutes.`
       });
       console.log('Goal added successfully:', newGoal);
+      setIsAddingGoal(null);
+      setNewGoalMinutes("60");
     } catch (error) {
       console.error('Error adding goal:', error);
       toast({
@@ -233,18 +237,64 @@ export function DailyGoals() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {availableCategories.map(category => (
-                <Button
-                  key={category.id}
-                  variant="outline"
-                  onClick={() => addGoal(category.id)}
-                  className="justify-start"
-                >
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: category.color }}
-                  />
-                  {category.name}
-                </Button>
+                <div key={category.id} className="space-y-2">
+                  {isAddingGoal === category.id ? (
+                    <div className="border rounded-lg p-3 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={newGoalMinutes}
+                          onChange={(e) => setNewGoalMinutes(e.target.value)}
+                          placeholder="Minutes"
+                          className="flex-1"
+                          min="1"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => addGoal(category.id, parseInt(newGoalMinutes))}
+                          disabled={!newGoalMinutes || parseInt(newGoalMinutes) < 1}
+                        >
+                          <Save className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setIsAddingGoal(null);
+                            setNewGoalMinutes("60");
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingGoal(category.id);
+                        setNewGoalMinutes("60");
+                      }}
+                      className="justify-between w-full"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        {category.name}
+                      </div>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
           </CardContent>
