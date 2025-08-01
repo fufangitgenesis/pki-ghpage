@@ -236,7 +236,7 @@ export function MonthlyOverview({ categories, vitalityBonuses }: MonthlyOverview
                       <div className="flex-1">
                         <div className="font-medium">{activity.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {category?.name} • {activity.duration}m • {activity.points} pts • Energy: {activity.energyLevel}
+                          {category?.name} • {Math.round(activity.duration / (1000 * 60))}m • {activity.points} pts • Energy: {activity.energyLevel}
                         </div>
                       </div>
                     </div>

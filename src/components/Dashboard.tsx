@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { KPICard } from "./KPICard";
 import { ActivityLogForm } from "./ActivityLogForm";
 import { VitalityChecklist } from "./VitalityChecklist";
@@ -307,7 +308,7 @@ export function Dashboard() {
                               style={{ backgroundColor: category.color }}
                             />
                             <span className="text-sm">{category.name}</span>
-                          </div>
+                            {(activity.duration / (1000 * 60)).toFixed(0)}m
                           <span className="text-sm font-medium">{hours.toFixed(1)}h</span>
                         </div>
                       );
@@ -330,10 +331,10 @@ export function Dashboard() {
                   View comprehensive analytics, trends, and weekly timetables
                 </p>
                 <Button asChild>
-                  <a href="/analytics">
+                  <Link to="/analytics">
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Open Analytics
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </CardContent>

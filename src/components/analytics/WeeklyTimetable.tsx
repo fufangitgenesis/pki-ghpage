@@ -56,15 +56,15 @@ export function WeeklyTimetable({ categories }: WeeklyTimetableProps) {
 
       const startTime = new Date(activity.startTime);
       const startHour = startTime.getHours() + startTime.getMinutes() / 60;
-      const duration = activity.duration / 60; // Convert to hours
+      const duration = activity.duration / (1000 * 60); // Convert milliseconds to minutes
       
       return {
         activity,
         category,
         startHour,
-        duration,
+        duration: duration / 60, // Convert to hours for positioning
         top: startHour * 60, // 60px per hour
-        height: Math.max(duration * 60, 30) // Minimum 30px height
+        height: Math.max((duration / 60) * 60, 30) // Minimum 30px height, duration in hours * 60px
       };
     }).filter(Boolean) as ActivityBlock[];
   };
@@ -181,7 +181,7 @@ export function WeeklyTimetable({ categories }: WeeklyTimetableProps) {
                           </span>
                         </div>
                         <div className="text-[9px] opacity-80">
-                          {Math.round(block.duration * 60)}m
+                          {Math.round(block.duration)}m
                         </div>
                       </div>
                     </div>
