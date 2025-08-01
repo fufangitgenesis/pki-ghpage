@@ -292,25 +292,33 @@ export function Dashboard() {
                   </div>
                   
                   {/* Time allocation chart placeholder */}
-                  <div className="space-y-3">
-                    {categories.map(category => {
-                      const categoryTime = activities
-                        .filter(activity => activity.categoryId === category.id)
-                        .reduce((sum, activity) => sum + activity.duration, 0);
-                      const hours = categoryTime / (1000 * 60 * 60);
-                      
-                      if (hours === 0) return null;
-                      
-                      return (
-                        <div key={category.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span className="text-sm">{category.name}</span>
-                            {(activity.duration / (1000 * 60)).toFixed(0)}m
-                          <span className="text-sm font-medium">{hours.toFixed(1)}h</span>
+   <div className="space-y-3">
+        {categories.map(category => {
+          const categoryTime = activities
+            .filter(activity => activity.categoryId === category.id)
+            .reduce((sum, activity) => sum + activity.duration, 0);
+
+          if (categoryTime === 0) return null;
+
+          return (
+            <div key={category.id} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: category.color }}
+                />
+                <span>{category.name}</span>
+              </div>
+              <span className="font-medium">
+                {formatDuration(categoryTime)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </CardContent>
+</Card>
                         </div>
                       );
                     })}
