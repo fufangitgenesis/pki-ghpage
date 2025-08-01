@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { KPICard } from "./KPICard";
 import { ActivityLogForm } from "./ActivityLogForm";
 import { VitalityChecklist } from "./VitalityChecklist";
@@ -334,10 +335,10 @@ export function Dashboard() {
                   View comprehensive analytics, trends, and weekly timetables
                 </p>
                 <Button asChild>
-                  <a href="/analytics">
+                  <Link to="/analytics">
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Open Analytics
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </CardContent>
