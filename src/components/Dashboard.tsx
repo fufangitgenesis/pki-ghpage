@@ -5,29 +5,31 @@ import { VitalityChecklist } from "./VitalityChecklist";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  db, 
-  ActivityCategory, 
-  VitalityBonus, 
-  ActivityLog, 
-  VitalityEntry 
+import {
+  db,
+  ActivityCategory,
+  VitalityBonus,
+  ActivityLog,
+  VitalityEntry
 } from "@/lib/database";
-import { 
-  calculateDailyMetrics, 
-  formatDuration, 
+import {
+  calculateDailyMetrics,
+  formatDuration,
   getDateString,
-  DailyMetrics 
+  DailyMetrics
 } from "@/lib/calculations";
-import { 
-  Target, 
-  Brain, 
-  Zap, 
-  Clock, 
+import {
+  Target,
+  Brain,
+  Zap,
+  Clock,
   TrendingUp,
   Calendar,
   BarChart3,
   Plus
 } from "lucide-react";
+// Add this import for the Link component
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export function Dashboard() {
