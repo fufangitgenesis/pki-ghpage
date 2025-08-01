@@ -2,39 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Daily Effectiveness Logger Design System
+   Modern productivity app with data-first design
+   All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    /* Core neutral palette */
+    --background: 240 10% 99%;
+    --foreground: 240 10% 3.9%;
+    
+    /* Card system */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 240 10% 3.9%;
+    
+    /* Interactive elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
+    
+    /* Primary brand - Productive Blue */
+    --primary: 224 71% 54%;
+    --primary-foreground: 0 0% 98%;
+    --primary-subtle: 224 71% 97%;
+    
+    /* Secondary - Deep Purple for focus */
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-subtle: 262 83% 97%;
+    
+    /* Accent - Energetic Teal */
+    --accent: 189 94% 43%;
+    --accent-foreground: 0 0% 98%;
+    --accent-subtle: 189 94% 97%;
+    
+    /* Success - Fresh Green */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --success-subtle: 142 76% 96%;
+    
+    /* Warning - Warm Orange */
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 98%;
+    --warning-subtle: 32 95% 96%;
+    
+    /* Muted elements */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Borders and inputs */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 224 71% 54%;
+    
+    /* Gradients for visual appeal */
+    --gradient-primary: linear-gradient(135deg, hsl(224 71% 54%), hsl(262 83% 58%));
+    --gradient-accent: linear-gradient(135deg, hsl(189 94% 43%), hsl(224 71% 54%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 10% 99%), hsl(240 5% 96%));
+    
+    /* Shadows for depth */
+    --shadow-elegant: 0 10px 25px -5px hsl(240 10% 3.9% / 0.1);
+    --shadow-glow: 0 0 40px hsl(224 71% 54% / 0.15);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --radius: 0.5rem;
 
