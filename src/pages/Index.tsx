@@ -1,7 +1,4 @@
-import { Dashboard } from "@/components/Dashboard";
-
-const Index = () => {
-  return <Dashboard />;
-};
-
-export default Index;
+// This file is no longer needed as we're using App.tsx for routing
+export default function Index() {
+  return null;
+}

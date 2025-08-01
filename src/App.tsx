@@ -1,27 +1,39 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Dashboard } from "@/components/Dashboard";
+import { DailyGoals } from "@/pages/DailyGoals";
+import { Analytics } from "@/pages/Analytics";
+import NotFound from "@/pages/NotFound";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <Router>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col">
+              <header className="h-12 flex items-center border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+                <SidebarTrigger className="ml-4" />
+              </header>
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/goals" element={<DailyGoals />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </div>
+          </div>
+        </SidebarProvider>
+        <Toaster />
+      </Router>
     </TooltipProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;

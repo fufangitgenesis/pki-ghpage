@@ -118,6 +118,26 @@ export function Dashboard() {
     }
   };
 
+  const handleActivityUpdated = async (activity: ActivityLog) => {
+    try {
+      await db.updateActivity(activity);
+      await loadDayData();
+    } catch (error) {
+      console.error('Failed to update activity:', error);
+      throw error;
+    }
+  };
+
+  const handleActivityDeleted = async (activityId: string) => {
+    try {
+      await db.deleteActivity(activityId);
+      await loadDayData();
+    } catch (error) {
+      console.error('Failed to delete activity:', error);
+      throw error;
+    }
+  };
+
   const handleVitalityToggle = async (bonusId: string, completed: boolean) => {
     try {
       const dateString = getDateString(selectedDate);
@@ -235,7 +255,10 @@ export function Dashboard() {
               <TabsContent value="activity">
                 <ActivityLogForm
                   categories={categories}
+                  activities={activities}
                   onActivityLogged={handleActivityLogged}
+                  onActivityUpdated={handleActivityUpdated}
+                  onActivityDeleted={handleActivityDeleted}
                   selectedDate={selectedDate}
                 />
               </TabsContent>
@@ -249,68 +272,72 @@ export function Dashboard() {
               </TabsContent>
             </Tabs>
 
-            {/* Activity Summary */}
+            {/* Daily Summary */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-accent" />
-                  Today's Activities
+                  Daily Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {activities.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">
+                      {Math.round(metrics.totalScore)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Total Daily Score</p>
+                  </div>
+                  
+                  {/* Time allocation chart placeholder */}
                   <div className="space-y-3">
-                    {activities
-                      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
-                      .map((activity) => {
-                        const category = categories.find(cat => cat.id === activity.categoryId);
-                        return (
-                          <div
-                            key={activity.id}
-                            className="flex items-center justify-between p-3 rounded-lg border bg-muted/20"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: category?.color }}
-                              />
-                              <div>
-                                <p className="font-medium text-sm">{activity.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {activity.startTime.toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                  })} - {activity.endTime.toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm font-semibold">
-                                {activity.points > 0 ? '+' : ''}{activity.points.toFixed(1)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDuration(activity.duration)}
-                              </p>
-                            </div>
+                    {categories.map(category => {
+                      const categoryTime = activities
+                        .filter(activity => activity.categoryId === category.id)
+                        .reduce((sum, activity) => sum + activity.duration, 0);
+                      const hours = categoryTime / (1000 * 60 * 60);
+                      
+                      if (hours === 0) return null;
+                      
+                      return (
+                        <div key={category.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span className="text-sm">{category.name}</span>
                           </div>
-                        );
-                      })}
+                          <span className="text-sm font-medium">{hours.toFixed(1)}h</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Plus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No activities logged today</p>
-                    <p className="text-sm text-muted-foreground">Start by logging your first activity</p>
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           </div>
+        </section>
+
+        {/* Navigation to Analytics */}
+        <section>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Detailed Analytics</h3>
+                <p className="text-muted-foreground mb-4">
+                  View comprehensive analytics, trends, and weekly timetables
+                </p>
+                <Button asChild>
+                  <a href="/analytics">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Open Analytics
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </div>
