@@ -84,17 +84,18 @@ export function calculateDailyMetrics(
   };
 }
 
-export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  
-  if (hours === 0) {
-    return `${mins}m`;
-  } else if (mins === 0) {
-    return `${hours}h`;
-  } else {
-    return `${hours}h ${mins}m`;
+export function formatDuration(ms: number): string {
+  // Return "0.0h" for zero or negative milliseconds to avoid errors
+  if (ms <= 0) {
+    return "0.0h";
   }
+
+  // Correctly convert milliseconds to hours
+  const hours = ms / (1000 * 60 * 60);
+
+  // Format to one decimal place and append the 'h' unit
+  return `${hours.toFixed(1)}h`;
+}
 }
 
 export function formatTime(date: Date): string {
