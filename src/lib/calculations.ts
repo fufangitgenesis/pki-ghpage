@@ -96,7 +96,7 @@ export function formatDuration(ms: number): string {
   // Format to one decimal place and append the 'h' unit
   return `${hours.toFixed(1)}h`;
 }
-}
+
 
 export function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-US', {
