@@ -211,7 +211,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['categories'], 'readwrite');
       const store = transaction.objectStore('categories');
-      const request = store.add(category);
+      const request = store.put(category);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();
@@ -238,7 +238,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['vitality'], 'readwrite');
       const store = transaction.objectStore('vitality');
-      const request = store.add(bonus);
+      const request = store.put(bonus);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();
