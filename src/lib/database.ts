@@ -340,6 +340,43 @@ class DatabaseManager {
     });
   }
 
+  // Get activities in date range
+  async getActivitiesInRange(startDate: string, endDate: string): Promise<ActivityLog[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['activities'], 'readonly');
+      const store = transaction.objectStore('activities');
+      const index = store.index('date');
+      const range = IDBKeyRange.bound(startDate, endDate);
+      const request = index.getAll(range);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  // Get vitality entries in date range
+  async getVitalityEntriesInRange(startDate: string, endDate: string): Promise<VitalityEntry[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['vitalityEntries'], 'readonly');
+      const store = transaction.objectStore('vitalityEntries');
+      const index = store.index('date');
+      const range = IDBKeyRange.bound(startDate, endDate);
+      const request = index.getAll(range);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  // Get all activities for analytics
+  async getAllActivitiesForAnalytics(): Promise<ActivityLog[]> {
+    return this.getAllActivities();
+  }
+
   // Export data
   async exportData(): Promise<string> {
     if (!this.db) throw new Error('Database not initialized');
