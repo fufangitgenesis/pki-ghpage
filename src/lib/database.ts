@@ -1,4 +1,7 @@
 // IndexedDB wrapper for privacy-first data storage
+
+// --- INTERFACES ---
+
 export interface ActivityCategory {
   id: string;
   name: string;
@@ -22,14 +25,23 @@ export interface ActivityLog {
   endTime: Date;
   date: string; // YYYY-MM-DD format
   energyLevel: 'High' | 'Medium' | 'Low';
-  duration: number; // in minutes
+  duration: number; // in milliseconds
   points: number;
 }
 
 export interface VitalityEntry {
-  id: string;
+  id:string;
   date: string; // YYYY-MM-DD format
   bonusId: string;
+  completed: boolean;
+}
+
+// [NEW] Interface for daily tasks
+export interface DailyTask {
+  id: string;
+  date: string; // YYYY-MM-DD format
+  name: string;
+  priority: 'High' | 'Medium' | 'Low';
   completed: boolean;
 }
 
@@ -49,83 +61,30 @@ export interface DailyMetrics {
   totalTimeLogged: number;
 }
 
-// Default activity categories
+// --- DEFAULTS ---
+
 export const defaultCategories: ActivityCategory[] = [
-  {
-    id: 'deep-work',
-    name: 'Deep Work',
-    points: 3,
-    color: '#3B82F6', // Primary blue
-    description: 'Focused, cognitively demanding work'
-  },
-  {
-    id: 'shallow-work',
-    name: 'Shallow Work',
-    points: 1,
-    color: '#8B5CF6', // Secondary purple
-    description: 'Administrative and logistical tasks'
-  },
-  {
-    id: 'learning',
-    name: 'Learning',
-    points: 2,
-    color: '#06B6D4', // Accent teal
-    description: 'Skill development and education'
-  },
-  {
-    id: 'meetings',
-    name: 'Meetings',
-    points: 1,
-    color: '#F59E0B', // Warning orange
-    description: 'Collaborative discussions and calls'
-  },
-  {
-    id: 'personal-care',
-    name: 'Personal Care',
-    points: 1,
-    color: '#10B981', // Success green
-    description: 'Health, wellness, and self-care activities'
-  },
-  {
-    id: 'distraction',
-    name: 'Distraction',
-    points: -1,
-    color: '#EF4444', // Destructive red
-    description: 'Social media, mindless browsing, etc.'
-  }
+  { id: 'deep-work', name: 'Deep Work', points: 3, color: '#3B82F6', description: 'Focused, cognitively demanding work' },
+  { id: 'shallow-work', name: 'Shallow Work', points: 1, color: '#8B5CF6', description: 'Administrative and logistical tasks' },
+  { id: 'learning', name: 'Learning', points: 2, color: '#06B6D4', description: 'Skill development and education' },
+  { id: 'meetings', name: 'Meetings', points: 1, color: '#F59E0B', description: 'Collaborative discussions and calls' },
+  { id: 'personal-care', name: 'Personal Care', points: 1, color: '#10B981', description: 'Health, wellness, and self-care activities' },
+  { id: 'distraction', name: 'Distraction', points: -1, color: '#EF4444', description: 'Social media, mindless browsing, etc.' }
 ];
 
-// Default vitality bonuses
 export const defaultVitalityBonuses: VitalityBonus[] = [
-  {
-    id: 'sleep',
-    name: 'Quality Sleep',
-    points: 5,
-    description: '7+ hours of restful sleep'
-  },
-  {
-    id: 'exercise',
-    name: 'Exercise',
-    points: 5,
-    description: 'Physical activity or workout'
-  },
-  {
-    id: 'meditation',
-    name: 'Meditation',
-    points: 3,
-    description: 'Mindfulness or meditation practice'
-  },
-  {
-    id: 'planning',
-    name: 'Daily Planning',
-    points: 2,
-    description: 'Setting intentions and planning the day'
-  }
+  { id: 'sleep', name: 'Quality Sleep', points: 5, description: '7+ hours of restful sleep' },
+  { id: 'exercise', name: 'Exercise', points: 5, description: 'Physical activity or workout' },
+  { id: 'meditation', name: 'Meditation', points: 3, description: 'Mindfulness or meditation practice' },
+  { id: 'planning', name: 'Daily Planning', points: 2, description: 'Setting intentions and planning the day' }
 ];
+
+// --- DATABASE MANAGER CLASS ---
 
 class DatabaseManager {
   private dbName = 'DailyEffectivenessLogger';
-  private version = 1;
+  // [UPDATED] Incremented version to trigger onupgradeneeded
+  private version = 2;
   private db: IDBDatabase | null = null;
 
   async init(): Promise<void> {
@@ -141,35 +100,40 @@ class DatabaseManager {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
-        // Create object stores
-        const categoriesStore = db.createObjectStore('categories', { keyPath: 'id' });
-        const vitalityStore = db.createObjectStore('vitality', { keyPath: 'id' });
-        const activitiesStore = db.createObjectStore('activities', { keyPath: 'id' });
-        const vitalityEntriesStore = db.createObjectStore('vitalityEntries', { keyPath: 'id' });
-        const goalsStore = db.createObjectStore('goals', { keyPath: 'id' });
-        const metricsStore = db.createObjectStore('metrics', { keyPath: 'date' });
+        // Create object stores if they don't exist
+        if (!db.objectStoreNames.contains('categories')) db.createObjectStore('categories', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('vitality')) db.createObjectStore('vitality', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('activities')) {
+            const activitiesStore = db.createObjectStore('activities', { keyPath: 'id' });
+            activitiesStore.createIndex('date', 'date', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('vitalityEntries')) {
+            const vitalityEntriesStore = db.createObjectStore('vitalityEntries', { keyPath: 'id' });
+            vitalityEntriesStore.createIndex('date', 'date', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('goals')) {
+            const goalsStore = db.createObjectStore('goals', { keyPath: 'id' });
+            goalsStore.createIndex('date', 'date', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('metrics')) db.createObjectStore('metrics', { keyPath: 'date' });
 
-        // Create indexes
-        activitiesStore.createIndex('date', 'date', { unique: false });
-        activitiesStore.createIndex('categoryId', 'categoryId', { unique: false });
-        vitalityEntriesStore.createIndex('date', 'date', { unique: false });
-        goalsStore.createIndex('date', 'date', { unique: false });
+        // [NEW] Create tasks object store
+        if (!db.objectStoreNames.contains('tasks')) {
+            const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
+            tasksStore.createIndex('date', 'date', { unique: false });
+        }
       };
     });
   }
 
   async initializeDefaultData(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
-
-    // Check if categories already exist
     const categoriesCount = await this.getCount('categories');
     if (categoriesCount === 0) {
       for (const category of defaultCategories) {
         await this.addCategory(category);
       }
     }
-
-    // Check if vitality bonuses already exist
     const vitalityCount = await this.getCount('vitality');
     if (vitalityCount === 0) {
       for (const bonus of defaultVitalityBonuses) {
@@ -178,269 +142,86 @@ class DatabaseManager {
     }
   }
 
+  private async getFromStore<T>(storeName: string): Promise<T[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  private async writeToStore<T>(storeName: string, data: T): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.put(data);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
   private async getCount(storeName: string): Promise<number> {
     if (!this.db) throw new Error('Database not initialized');
-
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction([storeName], 'readonly');
       const store = transaction.objectStore(storeName);
       const request = store.count();
-
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
   }
 
-  // Category methods
-  async getCategories(): Promise<ActivityCategory[]> {
+  private async getByDate<T>(storeName: string, date: string): Promise<T[]> {
     if (!this.db) throw new Error('Database not initialized');
-
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['categories'], 'readonly');
-      const store = transaction.objectStore('categories');
-      const request = store.getAll();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  async addCategory(category: ActivityCategory): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['categories'], 'readwrite');
-      const store = transaction.objectStore('categories');
-      const request = store.put(category);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  // Vitality methods
-  async getVitalityBonuses(): Promise<VitalityBonus[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitality'], 'readonly');
-      const store = transaction.objectStore('vitality');
-      const request = store.getAll();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  async addVitalityBonus(bonus: VitalityBonus): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitality'], 'readwrite');
-      const store = transaction.objectStore('vitality');
-      const request = store.put(bonus);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  // Activity methods
-  async addActivity(activity: ActivityLog): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readwrite');
-      const store = transaction.objectStore('activities');
-      const request = store.add(activity);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  async getActivitiesByDate(date: string): Promise<ActivityLog[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readonly');
-      const store = transaction.objectStore('activities');
-      const index = store.index('date');
-      const request = index.getAll(date);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  async updateActivity(activity: ActivityLog): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readwrite');
-      const store = transaction.objectStore('activities');
-      const request = store.put(activity);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  async deleteActivity(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readwrite');
-      const store = transaction.objectStore('activities');
-      const request = store.delete(id);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  // Vitality entry methods
-  async addVitalityEntry(entry: VitalityEntry): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitalityEntries'], 'readwrite');
-      const store = transaction.objectStore('vitalityEntries');
-      const request = store.add(entry);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  async getVitalityEntriesByDate(date: string): Promise<VitalityEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitalityEntries'], 'readonly');
-      const store = transaction.objectStore('vitalityEntries');
-      const index = store.index('date');
-      const request = index.getAll(date);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  async updateVitalityEntry(entry: VitalityEntry): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitalityEntries'], 'readwrite');
-      const store = transaction.objectStore('vitalityEntries');
-      const request = store.put(entry);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-
-  // Get activities in date range
-  async getActivitiesInRange(startDate: string, endDate: string): Promise<ActivityLog[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readonly');
-      const store = transaction.objectStore('activities');
-      const index = store.index('date');
-      const range = IDBKeyRange.bound(startDate, endDate);
-      const request = index.getAll(range);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  // Get vitality entries in date range
-  async getVitalityEntriesInRange(startDate: string, endDate: string): Promise<VitalityEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitalityEntries'], 'readonly');
-      const store = transaction.objectStore('vitalityEntries');
-      const index = store.index('date');
-      const range = IDBKeyRange.bound(startDate, endDate);
-      const request = index.getAll(range);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  // Get all activities for analytics
-  async getAllActivitiesForAnalytics(): Promise<ActivityLog[]> {
-    return this.getAllActivities();
-  }
-
-  // Export data
-  async exportData(): Promise<string> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    const data = {
-      categories: await this.getCategories(),
-      vitality: await this.getVitalityBonuses(),
-      activities: await this.getAllActivities(),
-      vitalityEntries: await this.getAllVitalityEntries(),
-      exportDate: new Date().toISOString()
-    };
-
-    return JSON.stringify(data, null, 2);
-  }
-
-  private async getAllActivities(): Promise<ActivityLog[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['activities'], 'readonly');
-      const store = transaction.objectStore('activities');
-      const request = store.getAll();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  private async getAllVitalityEntries(): Promise<VitalityEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['vitalityEntries'], 'readonly');
-      const store = transaction.objectStore('vitalityEntries');
-      const request = store.getAll();
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  // Clear all data
-  async clearAllData(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    const stores = ['activities', 'vitalityEntries', 'goals', 'metrics'];
-    
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(stores, 'readwrite');
-      
-      let completed = 0;
-      const checkComplete = () => {
-        completed++;
-        if (completed === stores.length) resolve();
-      };
-
-      stores.forEach(storeName => {
+        const transaction = this.db!.transaction([storeName], 'readonly');
         const store = transaction.objectStore(storeName);
-        const request = store.clear();
+        const index = store.index('date');
+        const request = index.getAll(date);
         request.onerror = () => reject(request.error);
-        request.onsuccess = checkComplete;
-      });
+        request.onsuccess = () => resolve(request.result);
     });
   }
+
+  private async deleteFromStore(storeName: string, id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    return new Promise((resolve, reject) => {
+        const transaction = this.db!.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.delete(id);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
+    });
+  }
+
+  // Generic Getters
+  async getCategories(): Promise<ActivityCategory[]> { return this.getFromStore('categories'); }
+  async getVitalityBonuses(): Promise<VitalityBonus[]> { return this.getFromStore('vitality'); }
+
+  // Generic Adders/Updaters
+  async addCategory(category: ActivityCategory): Promise<void> { await this.writeToStore('categories', category); }
+  async addVitalityBonus(bonus: VitalityBonus): Promise<void> { await this.writeToStore('vitality', bonus); }
+  
+  // Activity Methods
+  async addActivity(activity: ActivityLog): Promise<void> { await this.writeToStore('activities', activity); }
+  async updateActivity(activity: ActivityLog): Promise<void> { await this.writeToStore('activities', activity); }
+  async getActivitiesByDate(date: string): Promise<ActivityLog[]> { return this.getByDate('activities', date); }
+  async deleteActivity(id: string): Promise<void> { await this.deleteFromStore('activities', id); }
+
+  // Vitality Entry Methods
+  async addVitalityEntry(entry: VitalityEntry): Promise<void> { await this.writeToStore('vitalityEntries', entry); }
+  async updateVitalityEntry(entry: VitalityEntry): Promise<void> { await this.writeToStore('vitalityEntries', entry); }
+  async getVitalityEntriesByDate(date: string): Promise<VitalityEntry[]> { return this.getByDate('vitalityEntries', date); }
+
+  // [NEW] Task Methods
+  async addTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
+  async updateTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
+  async getTasksByDate(date: string): Promise<DailyTask[]> { return this.getByDate('tasks', date); }
+  async deleteTask(id: string): Promise<void> { await this.deleteFromStore('tasks', id); }
 }
 
 export const db = new DatabaseManager();
