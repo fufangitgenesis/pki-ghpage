@@ -79,19 +79,30 @@ export function DailyGoals() {
   };
 
   const addGoal = (categoryId: string) => {
-    const dateString = getDateString(selectedDate);
-    const newGoal: DailyGoal = {
-      id: crypto.randomUUID(),
-      categoryId,
-      targetMinutes: 60,
-      date: dateString
-    };
-    const updatedGoals = [...goals, newGoal];
-    saveGoals(updatedGoals);
-    toast({
-      title: "Goal Added",
-      description: "Daily goal has been set successfully."
-    });
+    console.log('Adding goal for category:', categoryId);
+    try {
+      const dateString = getDateString(selectedDate);
+      const newGoal: DailyGoal = {
+        id: `goal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        categoryId,
+        targetMinutes: 60,
+        date: dateString
+      };
+      const updatedGoals = [...goals, newGoal];
+      saveGoals(updatedGoals);
+      toast({
+        title: "Goal Added",
+        description: "Daily goal has been set successfully."
+      });
+      console.log('Goal added successfully:', newGoal);
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add goal. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const updateGoal = (goalId: string, targetMinutes: number) => {
