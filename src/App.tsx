@@ -7,11 +7,13 @@ import { Analytics } from "@/pages/Analytics";
 import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "next-themes";
 
 function App() {
   return (
-    <TooltipProvider>
-      <Router>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TooltipProvider>
+        <Router>
         <SidebarProvider>
           <div className="min-h-screen flex w-full">
             <AppSidebar />
@@ -31,8 +33,9 @@ function App() {
           </div>
         </SidebarProvider>
         <Toaster />
-      </Router>
-    </TooltipProvider>
+        </Router>
+      </TooltipProvider>
+    </ThemeProvider>
   );
 }
 

@@ -217,6 +217,39 @@ class DatabaseManager {
   async updateVitalityEntry(entry: VitalityEntry): Promise<void> { await this.writeToStore('vitalityEntries', entry); }
   async getVitalityEntriesByDate(date: string): Promise<VitalityEntry[]> { return this.getByDate('vitalityEntries', date); }
 
+  // Date Range Methods
+  async getActivitiesInRange(startDate: string, endDate: string): Promise<ActivityLog[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['activities'], 'readonly');
+      const store = transaction.objectStore('activities');
+      const index = store.index('date');
+      const range = IDBKeyRange.bound(startDate, endDate);
+      const request = index.getAll(range);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  async getVitalityEntriesInRange(startDate: string, endDate: string): Promise<VitalityEntry[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['vitalityEntries'], 'readonly');
+      const store = transaction.objectStore('vitalityEntries');
+      const index = store.index('date');
+      const range = IDBKeyRange.bound(startDate, endDate);
+      const request = index.getAll(range);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  // Goal Methods
+  async addGoal(goal: DailyGoal): Promise<void> { await this.writeToStore('goals', goal); }
+  async updateGoal(goal: DailyGoal): Promise<void> { await this.writeToStore('goals', goal); }
+  async getGoalsByDate(date: string): Promise<DailyGoal[]> { return this.getByDate('goals', date); }
+  async deleteGoal(id: string): Promise<void> { await this.deleteFromStore('goals', id); }
+
   // [NEW] Task Methods
   async addTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
   async updateTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
