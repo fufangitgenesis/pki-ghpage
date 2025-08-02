@@ -126,7 +126,7 @@ export function ActivityLogForm({
       duration,
       points,
       energyLevel,
-      linkedTaskId: linkedTaskId || undefined,
+      linkedTaskId: (linkedTaskId && linkedTaskId !== "none") ? linkedTaskId : undefined,
       date: getDateString(selectedDate)
     };
 
@@ -140,7 +140,7 @@ export function ActivityLogForm({
       } else {
         await onActivityLogged(activity);
         // Update linked task if one was selected
-        if (linkedTaskId) {
+        if (linkedTaskId && linkedTaskId !== "none") {
           const task = todayTasks.find(t => t.id === linkedTaskId);
           if (task) {
             const updatedTask = { ...task, timeLogged: task.timeLogged + duration };
@@ -266,7 +266,7 @@ export function ActivityLogForm({
                   <SelectValue placeholder="Select a task..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No task selected</SelectItem>
+                  <SelectItem value="none">No task selected</SelectItem>
                   {todayTasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       <div className="flex items-center gap-2">
