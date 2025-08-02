@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ActivityCategory, ActivityLog } from "@/lib/database";
+import { ActivityCategory, ActivityLog, Task, db } from "@/lib/database";
 import { getDateString } from "@/lib/calculations";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Link } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -32,8 +32,23 @@ export function ActivityLogForm({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [energyLevel, setEnergyLevel] = useState<"High" | "Medium" | "Low">("Medium");
+  const [linkedTaskId, setLinkedTaskId] = useState<string>("");
   const [editingActivity, setEditingActivity] = useState<ActivityLog | null>(null);
+  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadTodayTasks();
+  }, [selectedDate]);
+
+  const loadTodayTasks = async () => {
+    try {
+      const tasks = await db.getTasksForToday();
+      setTodayTasks(tasks.filter(task => !task.completed));
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    }
+  };
 
   const resetForm = () => {
     setName("");
@@ -41,6 +56,7 @@ export function ActivityLogForm({
     setStartTime("");
     setEndTime("");
     setEnergyLevel("Medium");
+    setLinkedTaskId("");
     setEditingActivity(null);
   };
 
@@ -51,6 +67,7 @@ export function ActivityLogForm({
     setStartTime(activity.startTime.toTimeString().slice(0, 5));
     setEndTime(activity.endTime.toTimeString().slice(0, 5));
     setEnergyLevel(activity.energyLevel);
+    setLinkedTaskId(activity.linkedTaskId || "");
   };
 
   const cancelEdit = () => {
@@ -109,6 +126,7 @@ export function ActivityLogForm({
       duration,
       points,
       energyLevel,
+      linkedTaskId: linkedTaskId || undefined,
       date: getDateString(selectedDate)
     };
 
@@ -121,6 +139,14 @@ export function ActivityLogForm({
         });
       } else {
         await onActivityLogged(activity);
+        // Update linked task if one was selected
+        if (linkedTaskId) {
+          const task = todayTasks.find(t => t.id === linkedTaskId);
+          if (task) {
+            const updatedTask = { ...task, timeLogged: task.timeLogged + duration };
+            await db.updateTask(updatedTask);
+          }
+        }
         toast({
           title: "Activity Logged",
           description: `Successfully logged ${name} for ${(duration / (1000 * 60 * 60)).toFixed(1)} hours.`
@@ -229,6 +255,26 @@ export function ActivityLogForm({
                   <SelectItem value="High">High Energy</SelectItem>
                   <SelectItem value="Medium">Medium Energy</SelectItem>
                   <SelectItem value="Low">Low Energy</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="linkedTask">Link to Task (Optional)</Label>
+              <Select value={linkedTaskId} onValueChange={setLinkedTaskId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a task..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No task selected</SelectItem>
+                  {todayTasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      <div className="flex items-center gap-2">
+                        <Link className="h-3 w-3" />
+                        {task.title}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

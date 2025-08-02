@@ -11,7 +11,8 @@ import {
   ActivityCategory,
   VitalityBonus,
   ActivityLog,
-  VitalityEntry
+  VitalityEntry,
+  Task
 } from "@/lib/database";
 import {
   calculateDailyMetrics,
@@ -23,10 +24,11 @@ import {
   Target,
   Brain,
   Zap,
-  Clock,
+  CheckCircle,
   TrendingUp,
   Calendar,
   BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +46,7 @@ export function Dashboard() {
     energyFocusCorrelation: { high: 0, medium: 0, low: 0 }
   });
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -54,8 +57,18 @@ export function Dashboard() {
   useEffect(() => {
     if (!isLoading) {
       loadDayData();
+      loadTodayTasks();
     }
   }, [selectedDate, isLoading]);
+
+  const loadTodayTasks = async () => {
+    try {
+      const tasks = await db.getTasksForToday();
+      setTodayTasks(tasks);
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    }
+  };
 
   const initializeData = async () => {
     try {
@@ -184,6 +197,12 @@ export function Dashboard() {
                 {selectedDate.toLocaleDateString()}
               </Button>
               <Button variant="outline" size="sm" asChild>
+                <Link to="/tasks">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Tasks
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
                 <Link to="/analytics">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
@@ -220,10 +239,10 @@ export function Dashboard() {
               variant="warning"
             />
             <KPICard
-              title="Time Logged"
-              value={formatDuration(metrics.totalTimeLogged)}
-              icon={Clock}
-              variant="accent"
+              title="Tasks Completed"
+              value={`${todayTasks.filter(t => t.completed).length} / ${todayTasks.length}`}
+              icon={CheckCircle}
+              variant="success"
             />
           </div>
         </section>
@@ -292,6 +311,12 @@ export function Dashboard() {
                         </div>
                       );
                     })}
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center justify-between text-sm font-medium">
+                        <span>Total Time Logged</span>
+                        <span>{formatDuration(metrics.totalTimeLogged)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

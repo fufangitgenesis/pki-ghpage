@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Dashboard } from "@/components/Dashboard";
 import { DailyGoals } from "@/pages/DailyGoals";
+import { Tasks } from "@/pages/Tasks";
 import { Analytics } from "@/pages/Analytics";
 import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
@@ -25,6 +26,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/goals" element={<DailyGoals />} />
+                  <Route path="/tasks" element={<Tasks />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

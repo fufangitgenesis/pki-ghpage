@@ -27,6 +27,7 @@ export interface ActivityLog {
   energyLevel: 'High' | 'Medium' | 'Low';
   duration: number; // in milliseconds
   points: number;
+  linkedTaskId?: string; // Optional link to a task
 }
 
 export interface VitalityEntry {
@@ -36,13 +37,16 @@ export interface VitalityEntry {
   completed: boolean;
 }
 
-// [NEW] Interface for daily tasks
-export interface DailyTask {
+// Enhanced Task interface
+export interface Task {
   id: string;
-  date: string; // YYYY-MM-DD format
-  name: string;
+  title: string;
   priority: 'High' | 'Medium' | 'Low';
+  scope: 'Today' | 'This Week' | 'This Month' | 'Inbox';
+  dueDate?: string; // YYYY-MM-DD format, optional for specific date
   completed: boolean;
+  timeLogged: number; // in milliseconds
+  createdDate: string; // YYYY-MM-DD format
 }
 
 export interface DailyGoal {
@@ -250,10 +254,22 @@ class DatabaseManager {
   async getGoalsByDate(date: string): Promise<DailyGoal[]> { return this.getByDate('goals', date); }
   async deleteGoal(id: string): Promise<void> { await this.deleteFromStore('goals', id); }
 
-  // [NEW] Task Methods
-  async addTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
-  async updateTask(task: DailyTask): Promise<void> { await this.writeToStore('tasks', task); }
-  async getTasksByDate(date: string): Promise<DailyTask[]> { return this.getByDate('tasks', date); }
+  // Task Methods
+  async addTask(task: Task): Promise<void> { await this.writeToStore('tasks', task); }
+  async updateTask(task: Task): Promise<void> { await this.writeToStore('tasks', task); }
+  async getTasks(): Promise<Task[]> { return this.getFromStore('tasks'); }
+  async getTasksByScope(scope: string): Promise<Task[]> {
+    const tasks = await this.getTasks();
+    return tasks.filter(task => task.scope === scope);
+  }
+  async getTasksForToday(): Promise<Task[]> {
+    const tasks = await this.getTasks();
+    const today = new Date().toISOString().split('T')[0];
+    return tasks.filter(task => 
+      task.scope === 'Today' || 
+      (task.dueDate === today)
+    );
+  }
   async deleteTask(id: string): Promise<void> { await this.deleteFromStore('tasks', id); }
 }
 

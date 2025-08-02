@@ -1,4 +1,4 @@
-import { Home, Target, BarChart3, Calendar } from "lucide-react";
+import { Home, Target, ClipboardList, BarChart3, Calendar } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Daily Goals", url: "/goals", icon: Target },
+  { title: "Tasks", url: "/tasks", icon: ClipboardList },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
 ];
 
