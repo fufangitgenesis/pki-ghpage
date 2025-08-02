@@ -5,8 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "pki-ghpage" //allow vite project to be deployed on github
-)
+  base: "pki-ghpage", //allow vite project to be deployed on github
+
   server: {
     host: "::",
     port: 8080,
