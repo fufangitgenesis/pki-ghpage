@@ -4,7 +4,7 @@
 
 ---
 
-![Daily Effectiveness Logger Screenshot]!(https://github.com/user-attachments/assets/5ae83ebe-9a93-4e46-a1b3-a057c78b3dfc)
+![Image](https://github.com/user-attachments/assets/5ae83ebe-9a93-4e46-a1b3-a057c78b3dfc)
 
 ### The Problem with "Busy"
 Many of us fall into the "busy but not productive" trap. We finish a day full of tasks but feel no closer to our most important goals. It's hard to know where our time and energy truly go, making it difficult to improve.
